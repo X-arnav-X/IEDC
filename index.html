@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pitch Perfect — Cray-Z-Summit</title>
+</head>
+<body style="margin:0;">
+<div id="iedc-draw-root"></div>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+  #iedc-draw-root {
+    --bg-0: #170F26;
+    --bg-1: #241839;
+    --bg-2: #2E1F49;
+    --accent: #E4FF6B;
+    --accent-dim: #B7CF52;
+    --pink: #FF6FA5;
+    --gold: #FFD166;
+    --ink: #F4F1FA;
+    --ink-dim: #B8AFD1;
+    --ink-faint: #7C7098;
+    --line: rgba(244,241,250,0.16);
+    --paper: #FBF9F2;
+    --paper-ink: #1C1530;
+    font-family: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
+    background:
+      radial-gradient(circle at 15% 8%, rgba(228,255,107,0.13), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(255,111,165,0.13), transparent 42%),
+      linear-gradient(160deg, var(--bg-0), var(--bg-1));
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 18px 64px;
+    position: relative;
+    overflow-x: hidden;
+  }
+  #iedc-draw-root * { box-sizing: border-box; }
+  #iedc-draw-root .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+
+  .stage {
+    width: 100%;
+    max-width: 380px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .brand { text-align: center; margin-bottom: 28px; }
+  .brand .mark {
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+  .brand h1 {
+    font-size: 27px;
+    line-height: 1.15;
+    margin: 0 0 6px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    transition: opacity 0.25s ease;
+  }
+  .brand p {
+    margin: 0;
+    color: var(--ink-dim);
+    font-size: 14.5px;
+    line-height: 1.45;
+    max-width: 300px;
+  }
+
+  /* ---------------- Draw dial ---------------- */
+  .dial-wrap {
+    position: relative;
+    width: 208px;
+    height: 208px;
+    margin: 6px 0 22px;
+  }
+  .dial-ring {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from -90deg, var(--accent) 0deg, var(--pink) 260deg, transparent 260deg);
+    padding: 5px;
+    animation: ringSpin 7s linear infinite;
+  }
+  @keyframes ringSpin { to { transform: rotate(360deg); } }
+  .dial-ring-mask {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: var(--bg-1);
+  }
+  .draw-btn {
+    position: absolute;
+    inset: 14px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    background: radial-gradient(circle at 32% 28%, #f1ffc7, var(--accent) 55%, var(--accent-dim) 100%);
+    color: #16210A;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    box-shadow: 0 10px 0 #8fa63c, 0 20px 32px rgba(0,0,0,0.4), inset 0 2px 6px rgba(255,255,255,0.5);
+    transition: transform 0.09s ease, box-shadow 0.09s ease;
+  }
+  .draw-btn:active {
+    transform: translateY(7px);
+    box-shadow: 0 3px 0 #8fa63c, 0 8px 16px rgba(0,0,0,0.35), inset 0 2px 6px rgba(255,255,255,0.5);
+  }
+  .draw-btn:disabled { opacity: 0.55; cursor: default; }
+  .draw-btn:focus-visible { outline: 3px solid var(--pink); outline-offset: 4px; }
+  .draw-sub {
+    color: var(--ink-dim);
+    font-size: 13.5px;
+    text-align: center;
+    max-width: 290px;
+  }
+  .team-input {
+    width: 100%;
+    max-width: 290px;
+    margin-bottom: 20px;
+    padding: 13px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 15px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .team-input::placeholder { color: var(--ink-faint); }
+  .team-input:focus { border-color: var(--accent); background: rgba(228,255,107,0.06); }
+  .err {
+    margin-top: 16px;
+    color: var(--pink);
+    font-size: 13px;
+    text-align: center;
+    max-width: 300px;
+    line-height: 1.5;
+    background: rgba(255,111,165,0.1);
+    border: 1px solid rgba(255,111,165,0.35);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+
+  /* ---------------- Scanning monitor ---------------- */
+  .monitor {
+    width: 100%;
+    background: #0F0A1C;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 22px 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 0 40px rgba(228,255,107,0.04);
+  }
+  .monitor .scanline {
+    position: absolute; left: 0; right: 0; height: 46px;
+    background: linear-gradient(180deg, transparent, rgba(228,255,107,0.14), transparent);
+    animation: scan 1.6s ease-in-out infinite;
+  }
+  @keyframes scan { 0% { top: -46px; } 100% { top: 100%; } }
+  .monitor .m-label {
+    font-size: 11px; letter-spacing: 0.1em; color: var(--accent-dim);
+    margin-bottom: 12px; position: relative; z-index: 1;
+  }
+  .monitor .m-text {
+    font-size: 17px; line-height: 1.5; font-weight: 600; color: var(--ink);
+    min-height: 78px; position: relative; z-index: 1;
+  }
+  .monitor .m-text .scr { color: var(--ink-faint); }
+
+  /* ---------------- Ticket ---------------- */
+  .printer-slot {
+    width: 92%;
+    height: 14px;
+    background: #0B0713;
+    border-radius: 6px 6px 0 0;
+    box-shadow: inset 0 4px 8px rgba(0,0,0,0.6);
+    position: relative;
+    z-index: 2;
+  }
+  .ticket-clip {
+    width: 100%;
+    overflow: hidden;
+    height: 0;
+    animation: printOut 0.68s cubic-bezier(.22,.85,.32,1.15) forwards;
+  }
+  @keyframes printOut { to { height: 236px; } }
+  .ticket {
+    width: 100%;
+    background: var(--paper);
+    color: var(--paper-ink);
+    border-radius: 0 0 16px 16px;
+    position: relative;
+    box-shadow: 0 24px 50px rgba(0,0,0,0.45);
+  }
+  .ticket-top { padding: 22px 24px 18px; position: relative; }
+  .ticket-top .eyebrow {
+    font-size: 11px; letter-spacing: 0.12em; color: #8A7FA6;
+    font-weight: 600; margin-bottom: 10px;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+  .scenario-text { font-size: 18.5px; line-height: 1.5; color: #241839; font-weight: 600; }
+
+  .stamp {
+    position: absolute;
+    top: 18px; right: 18px;
+    width: 66px; height: 66px;
+    border: 2.5px solid var(--pink);
+    border-radius: 50%;
+    color: var(--pink);
+    display: flex; align-items: center; justify-content: center;
+    text-align: center;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    transform: rotate(-14deg) scale(0);
+    opacity: 0;
+    line-height: 1.3;
+    mix-blend-mode: multiply;
+  }
+  .stamp.show { animation: stampDown 0.4s cubic-bezier(.3,1.6,.4,1) forwards; }
+  @keyframes stampDown {
+    0% { transform: rotate(-14deg) scale(2.4); opacity: 0; }
+    60% { opacity: 1; }
+    100% { transform: rotate(-14deg) scale(1); opacity: 1; }
+  }
+
+  .perforation { position: relative; height: 0; border-top: 2px dashed #D8D2C5; margin: 4px 0 0; }
+  .perforation::before, .perforation::after {
+    content: ""; position: absolute; top: -13px; width: 26px; height: 26px;
+    border-radius: 50%; background: var(--bg-1);
+  }
+  .perforation::before { left: -13px; }
+  .perforation::after { right: -13px; }
+
+  .ticket-meta {
+    padding: 16px 24px 22px;
+    display: flex; justify-content: space-between;
+    font-size: 11.5px; color: #A79BC2;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  }
+
+  .again-note { margin-top: 20px; text-align: center; color: var(--ink-dim); font-size: 13px; max-width: 300px; }
+
+  .shake { animation: shake 0.32s ease; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+  }
+
+  /* ---------------- Confetti ---------------- */
+  .confetti-piece {
+    position: absolute; top: -10px; width: 7px; height: 12px;
+    opacity: 0.9; border-radius: 1px;
+    animation: fall linear forwards;
+    z-index: 3;
+  }
+  @keyframes fall {
+    to { transform: translateY(320px) rotate(540deg); opacity: 0; }
+  }
+
+  /* ---------------- Host access ---------------- */
+  .host-toggle {
+    position: fixed; right: 16px; bottom: 14px;
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.04);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; opacity: 0.55;
+  }
+  .host-toggle svg { width: 16px; height: 16px; fill: var(--ink-dim); }
+  .host-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .host-panel {
+    position: fixed; inset: 0; background: rgba(10,6,18,0.72);
+    display: none; align-items: flex-end; justify-content: center; z-index: 50;
+  }
+  .host-panel.open { display: flex; }
+  .host-sheet {
+    width: 100%; max-width: 420px;
+    background: #1C1330;
+    border-radius: 20px 20px 0 0;
+    padding: 22px 22px 28px;
+    border: 1px solid var(--line);
+    max-height: 82vh;
+    overflow-y: auto;
+  }
+  .host-sheet h2 { font-size: 17px; margin: 0 0 4px; }
+  .host-sheet .hint { font-size: 12.5px; color: var(--ink-dim); margin: 0 0 16px; }
+
+  .total-readout {
+    display: flex; align-items: baseline; gap: 8px;
+    border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 16px;
+  }
+  .total-readout .num { font-size: 26px; font-weight: 700; color: var(--accent); font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  .total-readout .lbl { font-size: 12px; color: var(--ink-dim); }
+
+  .host-btn {
+    width: 100%; padding: 12px; border-radius: 10px; border: none;
+    font-family: inherit; font-weight: 600; font-size: 14px; cursor: pointer; margin-top: 10px;
+    position: relative; overflow: hidden;
+  }
+  .host-btn.danger { background: rgba(255,111,165,0.16); color: var(--pink); border: 1px solid rgba(255,111,165,0.4); }
+  .host-btn.danger .timerbar {
+    position: absolute; left: 0; bottom: 0; height: 2px; background: var(--pink);
+    animation: shrink 3s linear forwards;
+  }
+  @keyframes shrink { from { width: 100%; } to { width: 0%; } }
+  .host-btn.ghost { background: transparent; color: var(--ink-dim); border: 1px solid var(--line); }
+  .host-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .counts-list { margin: 4px 0 4px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .counts-row { display: flex; align-items: center; gap: 10px; font-size: 12.5px; margin-bottom: 10px; }
+  .counts-row .label { flex: 1; color: var(--ink-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .counts-row .bar-track { width: 64px; height: 7px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+  .counts-row .bar-fill { height: 100%; background: linear-gradient(90deg, var(--pink), var(--accent)); border-radius: 4px; }
+  .counts-row .count-num { width: 18px; text-align: right; color: var(--ink-dim); font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+
+  .host-tabs { display: flex; gap: 6px; border-top: 1px solid var(--line); padding-top: 14px; margin-bottom: 12px; }
+  .host-tab {
+    flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--line);
+    background: transparent; color: var(--ink-dim); font-family: inherit; font-weight: 600;
+    font-size: 12.5px; cursor: pointer;
+  }
+  .host-tab.active { background: rgba(228,255,107,0.12); color: var(--accent); border-color: rgba(228,255,107,0.35); }
+
+  .team-log { max-height: 260px; overflow-y: auto; }
+  .log-empty { color: var(--ink-faint); font-size: 12.5px; text-align: center; padding: 18px 0; }
+  .log-row {
+    display: grid; grid-template-columns: 1fr auto; gap: 2px 10px;
+    padding: 9px 0; border-bottom: 1px solid var(--line);
+  }
+  .log-row:last-child { border-bottom: none; }
+  .log-team { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .log-topic { grid-column: 1 / 2; font-size: 12px; color: var(--ink-dim); }
+  .log-time { grid-column: 2 / 3; grid-row: 1 / 3; align-self: center; font-size: 11px; color: var(--ink-faint); }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dial-ring, .scanline, .shake, .confetti-piece { animation: none !important; }
+    .ticket-clip { animation-duration: 0.01s !important; height: 236px !important; }
+    .stamp.show { animation-duration: 0.01s !important; transform: rotate(-14deg) scale(1) !important; opacity: 1 !important; }
+  }
+</style>
+
+<script>
+(function() {
+  const SCENARIOS = [
+    "Elon Musk — Stand-up Comedy Set",
+    "Ravi Kishan — Scientific Research",
+    "PM Modi — Video Games",
+    "Salman Khan — Wildlife Protection",
+    "Jeff Bezos — Adivasi Hair Oil",
+    "Tiger Shroff — Room Freshener",
+    "Puneet Superstar — Kavi Sammelan",
+    "Ajay Devgn — Oral Healthcare",
+    "Ramdev Baba — Energy Drinks",
+    "Erling Haaland — AI Workshop",
+    "Aashish Chanchlani is visiting but it's the college exam week.",
+    "Tanmay Bhatt agrees to perform, but only if the event is completely free for students.",
+    "One Direction is reuniting but they want an open Amphitheatre.",
+    "Messi is joining but will join online only.",
+    "Ronaldo is coming but he only wants his brands to be promoted."
+  ];
+  const COUNTS_KEY = "iedc-topic-counts";
+  const TOTAL_KEY = "iedc-topic-total";
+  const LOG_KEY = "iedc-draws-log";
+  const MY_KEY = "iedc-my-topic";
+  const TEAM_NAME_KEY = "iedc-team-name";
+  const SCRAMBLE_POOL = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const root = document.getElementById("iedc-draw-root");
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+  // Counts and the total-draws tally must be consistent for every visitor,
+  // so they live server-side behind /api/kv (backed by Netlify Blobs — a
+  // free key-value store built into Netlify, no external account needed).
+  // We surface the real error text (not just a generic message) so a
+  // misconfigured deployment is easy to diagnose.
+  async function kvGet(key) {
+    const res = await fetch(`/api/kv?key=${encodeURIComponent(key)}`);
+    let data = null;
+    try { data = await res.json(); } catch (e) {}
+    if (!res.ok) {
+      const detail = (data && data.error) || `HTTP ${res.status}`;
+      console.error("kv get failed:", detail);
+      throw new Error(detail);
+    }
+    return data.value;
+  }
+  async function kvSet(key, value) {
+    const res = await fetch(`/api/kv?key=${encodeURIComponent(key)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value })
+    });
+    let data = null;
+    try { data = await res.json(); } catch (e) {}
+    if (!res.ok) {
+      const detail = (data && data.error) || `HTTP ${res.status}`;
+      console.error("kv set failed:", detail);
+      throw new Error(detail);
+    }
+  }
+
+  async function getCounts() {
+    const value = await kvGet(COUNTS_KEY);
+    if (value) return value;
+    const fresh = {};
+    SCENARIOS.forEach((_, i) => fresh[i] = 0);
+    return fresh;
+  }
+  async function saveCounts(counts) { await kvSet(COUNTS_KEY, counts); }
+
+  async function getTotal() {
+    const value = await kvGet(TOTAL_KEY);
+    return typeof value === "number" ? value : 0;
+  }
+  async function saveTotal(n) { await kvSet(TOTAL_KEY, n); }
+
+  // The facilitator log (team name -> topic drawn) needs to be visible to
+  // every device that opens the host panel, so it lives server-side too.
+  async function getLog() {
+    const value = await kvGet(LOG_KEY);
+    return Array.isArray(value) ? value : [];
+  }
+  async function saveLog(log) { await kvSet(LOG_KEY, log); }
+
+  // A team's own ticket only needs to persist on their own device, so this
+  // stays in localStorage rather than round-tripping to the server.
+  function getMyTopic() {
+    try {
+      const raw = localStorage.getItem(MY_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return null;
+  }
+  function saveMyTopic(t) { localStorage.setItem(MY_KEY, JSON.stringify(t)); }
+
+  function render(html) { root.innerHTML = html; }
+
+  function buttonScreen(disabled, errMsg, teamName) {
+    const name = teamName || "";
+    return `
+      <div class="stage">
+        <div class="brand">
+          <div class="mark">CRAY-Z-SUMMIT</div>
+          <h1>Pitch Perfect</h1>
+          <p>Enter your team name, then press the dial to draw today's scenario.</p>
+        </div>
+        <input class="team-input" id="teamNameInput" type="text" placeholder="Team name" maxlength="40" autocomplete="off" value="${name.replace(/"/g, '&quot;')}" />
+        <div class="dial-wrap">
+          <div class="dial-ring"><div class="dial-ring-mask"></div></div>
+          <button class="draw-btn" id="drawBtn" ${disabled ? "disabled" : ""}>${disabled ? "Drawing…" : "Tap to<br/>draw"}</button>
+        </div>
+        <div class="draw-sub">One draw per team — your result stays on this screen.</div>
+        ${errMsg ? `<div class="err" role="alert">${errMsg}</div>` : ""}
+      </div>
+    `;
+  }
+
+  function monitorScreen() {
+    return `
+      <div class="stage">
+        <div class="brand">
+          <div class="mark">CRAY-Z-SUMMIT</div>
+          <h1>Reading the room…</h1>
+          <p>Weighing every scenario against what's already been drawn.</p>
+        </div>
+        <div class="monitor">
+          <div class="scanline"></div>
+          <div class="m-label mono">SCENARIO LOOKUP</div>
+          <div class="m-text mono" id="scrambleText" aria-hidden="true"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  function ticketScreen(pick) {
+    const t = new Date(pick.time);
+    const timeStr = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const serial = String(pick.serial).padStart(4, '0');
+    return `
+      <div class="stage" id="ticketStage">
+        <div class="brand">
+          <div class="mark">CRAY-Z-SUMMIT</div>
+          <h1>Your topic is in.</h1>
+          <p>Take this back to your team and start planning.</p>
+        </div>
+        <div class="printer-slot"></div>
+        <div class="ticket-clip">
+          <div class="ticket">
+            <div class="stamp mono" id="stampEl">DRAW<br/>COMPLETE</div>
+            <div class="ticket-top">
+              <div class="eyebrow">${pick.team ? pick.team.toUpperCase() + " — YOUR TOPIC" : "YOUR TOPIC"}</div>
+              <div class="scenario-text">${pick.scenario}</div>
+            </div>
+            <div class="perforation"></div>
+            <div class="ticket-meta">
+              <span>No. ${serial}</span>
+              <span>DRAWN ${timeStr}</span>
+            </div>
+          </div>
+        </div>
+        <div class="again-note">Already drawn? Keep this screen open — your facilitator may ask to see it.</div>
+        <div class="sr-only" role="status" aria-live="polite">Your scenario: ${pick.scenario}</div>
+      </div>
+    `;
+  }
+
+  function scrambleReveal(el, finalText, duration) {
+    return new Promise((resolve) => {
+      if (reduceMotion) { el.textContent = finalText; resolve(); return; }
+      const len = finalText.length;
+      const start = performance.now();
+      function frame(now) {
+        const elapsed = now - start;
+        const progress = Math.min(1, elapsed / duration);
+        const revealCount = Math.floor(progress * len);
+        let out = "";
+        for (let i = 0; i < len; i++) {
+          const ch = finalText[i];
+          if (i < revealCount || ch === " ") { out += ch; }
+          else { out += `<span class="scr">${SCRAMBLE_POOL[Math.floor(Math.random() * SCRAMBLE_POOL.length)]}</span>`; }
+        }
+        el.innerHTML = out;
+        if (progress < 1) requestAnimationFrame(frame);
+        else { el.textContent = finalText; resolve(); }
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  function spawnConfetti() {
+    if (reduceMotion) return;
+    const stage = document.getElementById("ticketStage");
+    if (!stage) return;
+    const colors = ["var(--accent)", "var(--pink)", "var(--gold)"];
+    for (let i = 0; i < 14; i++) {
+      const piece = document.createElement("div");
+      piece.className = "confetti-piece";
+      piece.style.left = (10 + Math.random() * 80) + "%";
+      piece.style.background = colors[i % colors.length];
+      piece.style.animationDuration = (0.9 + Math.random() * 0.6) + "s";
+      piece.style.animationDelay = (Math.random() * 0.15) + "s";
+      stage.appendChild(piece);
+      piece.addEventListener("animationend", () => piece.remove());
+    }
+  }
+
+  async function playDrawSequence(pick) {
+    render(monitorScreen());
+    const scrambleEl = document.getElementById("scrambleText");
+    await sleep(150);
+    await scrambleReveal(scrambleEl, pick.scenario, 1100);
+    await sleep(350);
+    render(ticketScreen(pick));
+    attachHostToggle();
+    await sleep(700);
+    const stage = document.getElementById("ticketStage");
+    if (stage) { stage.classList.add("shake"); setTimeout(() => stage.classList.remove("shake"), 340); }
+    spawnConfetti();
+    const stampEl = document.getElementById("stampEl");
+    if (stampEl) stampEl.classList.add("show");
+  }
+
+  async function doDraw() {
+    const input = document.getElementById("teamNameInput");
+    const teamName = input ? input.value.trim() : "";
+    if (!teamName) return; // guarded by disabled state, but double-check
+    localStorage.setItem(TEAM_NAME_KEY, teamName);
+
+    render(buttonScreen(true, "", teamName));
+    try {
+      const counts = await getCounts();
+      const log = await getLog();
+      const lastIdx = log.length ? String(log[log.length - 1].idx) : null;
+
+      let minCount = Infinity;
+      Object.values(counts).forEach(c => { if (c < minCount) minCount = c; });
+      let candidates = Object.keys(counts).filter(k => counts[k] === minCount && k !== lastIdx);
+      if (candidates.length === 0) {
+        // Only happens if every least-drawn topic IS the last one drawn
+        // (e.g. very few topics left) — fall back to allowing a repeat.
+        candidates = Object.keys(counts).filter(k => counts[k] === minCount);
+      }
+      const chosenIdx = candidates[Math.floor(Math.random() * candidates.length)];
+      counts[chosenIdx] += 1;
+      await saveCounts(counts);
+
+      let total = await getTotal();
+      total += 1;
+      await saveTotal(total);
+
+      const idxNum = Number(chosenIdx);
+      log.push({ team: teamName, idx: idxNum, time: Date.now(), serial: total });
+      // Keep the log from growing unbounded across a very long-running event.
+      if (log.length > 500) log.splice(0, log.length - 500);
+      await saveLog(log);
+
+      const pick = { scenario: SCENARIOS[idxNum], time: Date.now(), serial: total, team: teamName };
+      saveMyTopic(pick);
+      await playDrawSequence(pick);
+    } catch (e) {
+      console.error("Draw failed:", e);
+      render(buttonScreen(false, `Couldn't reach the scenario list (${e.message}). Tap to retry.`, teamName));
+      attachDrawHandler();
+      attachHostToggle();
+    }
+  }
+
+  function attachDrawHandler() {
+    const btn = document.getElementById("drawBtn");
+    const input = document.getElementById("teamNameInput");
+    if (!btn || !input) return;
+    function sync() { btn.disabled = input.value.trim().length === 0; }
+    sync();
+    input.addEventListener("input", sync);
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !btn.disabled) doDraw(); });
+    btn.addEventListener("click", doDraw);
+  }
+
+  function attachHostToggle() {
+    let toggle = document.querySelector(".host-toggle");
+    if (!toggle) {
+      toggle = document.createElement("button");
+      toggle.className = "host-toggle";
+      toggle.setAttribute("aria-label", "Host settings");
+      toggle.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>`;
+      toggle.addEventListener("click", openHostPanel);
+      root.appendChild(toggle);
+    }
+  }
+
+  async function openHostPanel() {
+    let panel = document.querySelector(".host-panel");
+    if (panel) { panel.classList.add("open"); return; }
+
+    let counts, total, log;
+    try {
+      counts = await getCounts();
+      total = await getTotal();
+      log = await getLog();
+    } catch (e) {
+      console.error("Host panel load failed:", e);
+      alert(`Couldn't load host data: ${e.message}`);
+      return;
+    }
+
+    panel = document.createElement("div");
+    panel.className = "host-panel open";
+    panel.innerHTML = `
+      <div class="host-sheet">
+        <h2>Facilitator settings</h2>
+        <p class="hint">Draws are kept balanced automatically, and never repeat the topic the previous team just got.</p>
+        <div class="total-readout">
+          <span class="num mono">${total}</span>
+          <span class="lbl">topics drawn so far</span>
+        </div>
+        <div class="host-tabs">
+          <button class="host-tab active" data-tab="log">Team log</button>
+          <button class="host-tab" data-tab="counts">Balance</button>
+        </div>
+        <div class="team-log" id="teamLog"></div>
+        <div class="counts-list" id="countsList" style="display:none;"></div>
+        <button class="host-btn danger" id="resetAll">Reset everything</button>
+        <button class="host-btn ghost" id="closeHost">Close</button>
+      </div>
+    `;
+    root.appendChild(panel);
+
+    function renderLog(l) {
+      const box = panel.querySelector("#teamLog");
+      if (!l.length) {
+        box.innerHTML = `<div class="log-empty">No draws yet.</div>`;
+        return;
+      }
+      box.innerHTML = l.slice().reverse().map(entry => {
+        const timeStr = new Date(entry.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const topic = SCENARIOS[entry.idx] || "Unknown topic";
+        return `
+          <div class="log-row">
+            <div class="log-team">${(entry.team || "Unnamed team").replace(/</g, "&lt;")}</div>
+            <div class="log-topic">${topic}</div>
+            <div class="log-time mono">${timeStr}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderCounts(c) {
+      const list = panel.querySelector("#countsList");
+      const max = Math.max(1, ...Object.values(c));
+      list.innerHTML = SCENARIOS.map((s, i) => `
+        <div class="counts-row">
+          <span class="label">${i + 1}. ${s.slice(0, 34)}${s.length > 34 ? '…' : ''}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${(c[i]/max)*100}%"></div></div>
+          <span class="count-num mono">${c[i]}</span>
+        </div>
+      `).join("");
+    }
+    renderLog(log);
+    renderCounts(counts);
+
+    panel.querySelectorAll(".host-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        panel.querySelectorAll(".host-tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        const showLog = tab.dataset.tab === "log";
+        panel.querySelector("#teamLog").style.display = showLog ? "" : "none";
+        panel.querySelector("#countsList").style.display = showLog ? "none" : "";
+      });
+    });
+
+    panel.querySelector("#closeHost").addEventListener("click", () => panel.classList.remove("open"));
+
+    let confirming = false;
+    let confirmTimer = null;
+    const resetBtn = panel.querySelector("#resetAll");
+    resetBtn.addEventListener("click", async () => {
+      if (!confirming) {
+        confirming = true;
+        resetBtn.innerHTML = `Tap again to confirm<div class="timerbar"></div>`;
+        confirmTimer = setTimeout(() => {
+          confirming = false;
+          resetBtn.innerHTML = "Reset everything";
+        }, 3000);
+        return;
+      }
+      clearTimeout(confirmTimer);
+      confirming = false;
+      const fresh = {};
+      SCENARIOS.forEach((_, i) => fresh[i] = 0);
+      await saveCounts(fresh);
+      await saveTotal(0);
+      await saveLog([]);
+      resetBtn.innerHTML = "Reset everything";
+      panel.querySelector(".total-readout .num").textContent = "0";
+      renderCounts(fresh);
+      renderLog([]);
+    });
+  }
+
+  async function init() {
+    const mine = getMyTopic();
+    if (mine) {
+      render(ticketScreen(mine));
+      const stampEl = document.getElementById("stampEl");
+      if (stampEl) stampEl.classList.add("show");
+    } else {
+      const savedName = localStorage.getItem(TEAM_NAME_KEY) || "";
+      render(buttonScreen(false, "", savedName));
+      attachDrawHandler();
+    }
+    attachHostToggle();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
