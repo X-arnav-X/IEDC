@@ -467,9 +467,9 @@
         <div class="brand">
           <div class="mark">CRAY-Z-SUMMIT</div>
           <h1>Pitch Perfect</h1>
-          <p>Enter your team name, then press the dial to draw today's scenario.</p>
+          <p>Enter your team number, then press the dial to draw today's scenario.</p>
         </div>
-        <input class="team-input" id="teamNameInput" type="text" placeholder="Team name" maxlength="40" autocomplete="off" value="${name.replace(/"/g, '&quot;')}" />
+        <input class="team-input" id="teamNameInput" type="text" placeholder="Team Number" maxlength="40" autocomplete="off" value="${name.replace(/"/g, '&quot;')}" />
         <div class="dial-wrap">
           <div class="dial-ring"><div class="dial-ring-mask"></div></div>
           <button class="draw-btn" id="drawBtn" ${disabled ? "disabled" : ""}>${disabled ? "Drawing…" : "Tap to<br/>draw"}</button>
